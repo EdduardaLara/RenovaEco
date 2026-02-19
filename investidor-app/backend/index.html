@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RenovaEco – Gerador de Relatório</title>
+  <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --teal:      #1a5c5c;
+      --teal-dark: #0f3d3d;
+      --teal-mid:  #256b6b;
+      --lime:      #c8d400;
+      --lime-light:#dde84a;
+      --lime-glow: rgba(200,212,0,0.18);
+      --white:     #f5f9f5;
+      --gray:      #8aa8a8;
+      --bg:        #0c2e2e;
+    }
+
+    body {
+      font-family: 'DM Sans', sans-serif;
+      background: var(--bg);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+
+    .blob {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.25;
+      pointer-events: none;
+      z-index: 0;
+    }
+    .blob-1 { width:500px;height:500px;background:var(--teal-mid);top:-100px;left:-100px; }
+    .blob-2 { width:350px;height:350px;background:var(--lime);bottom:-80px;right:-80px; }
+    .blob-3 { width:200px;height:200px;background:var(--lime);top:40%;left:60%;opacity:.10; }
+
+    .page {
+      position: relative;
+      z-index: 1;
+      width: 100%;
+      max-width: 520px;
+      padding: 40px 20px;
+      animation: fadeUp 0.7s cubic-bezier(.22,.68,0,1.2) both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity:0; transform:translateY(32px); }
+      to   { opacity:1; transform:translateY(0); }
+    }
+
+    .card {
+      background: linear-gradient(145deg, rgba(26,92,92,.55), rgba(15,61,61,.75));
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(200,212,0,.18);
+      border-radius: 28px;
+      padding: 52px 48px 44px;
+      box-shadow: 0 32px 80px rgba(0,0,0,.45), 0 0 0 1px rgba(255,255,255,.04);
+    }
+
+    .logo-area {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      margin-bottom: 36px;
+    }
+    .logo-text {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.55rem;
+      font-weight: 700;
+      color: var(--white);
+      letter-spacing: -.5px;
+      line-height: 1;
+    }
+    .logo-text span { color: var(--lime); }
+    .logo-sub {
+      font-size: .7rem;
+      font-weight: 400;
+      color: var(--gray);
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      margin-top: 3px;
+    }
+
+    .heading {
+      font-family: 'Sora', sans-serif;
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: var(--white);
+      line-height: 1.2;
+      margin-bottom: 8px;
+    }
+    .heading span { color: var(--lime); }
+    .subheading {
+      font-size: .9rem;
+      color: var(--gray);
+      margin-bottom: 36px;
+      line-height: 1.5;
+    }
+
+    .dropzone {
+      border: 2px dashed rgba(200,212,0,.35);
+      border-radius: 18px;
+      padding: 36px 24px;
+      text-align: center;
+      cursor: pointer;
+      transition: all .25s ease;
+      background: rgba(200,212,0,.04);
+      margin-bottom: 28px;
+      position: relative;
+    }
+    .dropzone:hover, .dropzone.dragging {
+      border-color: var(--lime);
+      background: var(--lime-glow);
+      transform: scale(1.01);
+    }
+    .dropzone input[type="file"] {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+      width: 100%;
+      height: 100%;
+    }
+    .dz-icon { font-size: 2.4rem; margin-bottom: 12px; display: block; filter: drop-shadow(0 0 12px rgba(200,212,0,.4)); }
+    .dz-title { font-family:'Sora',sans-serif; font-size:1rem; font-weight:600; color:var(--white); margin-bottom:4px; }
+    .dz-hint  { font-size:.78rem; color:var(--gray); }
+    .dz-filename {
+      margin-top: 14px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(200,212,0,.12);
+      border: 1px solid rgba(200,212,0,.3);
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: .82rem;
+      color: var(--lime-light);
+      font-weight: 500;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 16px;
+      border-radius: 14px;
+      border: none;
+      background: linear-gradient(135deg, var(--lime) 0%, #a8b800 100%);
+      color: var(--teal-dark);
+      font-family: 'Sora', sans-serif;
+      font-size: 1rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all .2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      box-shadow: 0 8px 24px rgba(200,212,0,.25);
+    }
+    .btn:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 32px rgba(200,212,0,.4);
+      background: linear-gradient(135deg, var(--lime-light) 0%, var(--lime) 100%);
+    }
+    .btn:disabled { opacity:.5; cursor:not-allowed; }
+
+    .spinner {
+      width:18px; height:18px;
+      border: 2.5px solid rgba(15,61,61,.3);
+      border-top-color: var(--teal-dark);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      display: inline-block;
+    }
+    @keyframes spin { to { transform:rotate(360deg); } }
+
+    .status {
+      margin-top: 18px;
+      padding: 12px 16px;
+      border-radius: 10px;
+      font-size: .85rem;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      animation: fadeIn .3s ease;
+    }
+    @keyframes fadeIn { from{opacity:0} to{opacity:1} }
+    .status.success { background:rgba(200,212,0,.1); border:1px solid rgba(200,212,0,.3); color:var(--lime-light); }
+    .status.error   { background:rgba(255,80,80,.1);  border:1px solid rgba(255,80,80,.3);  color:#ff9090; }
+
+    .divider {
+      display:flex; align-items:center; gap:12px;
+      margin: 28px 0 20px;
+    }
+    .divider::before,.divider::after { content:''; flex:1; height:1px; background:rgba(255,255,255,.08); }
+    .divider span { font-size:.72rem; color:var(--gray); text-transform:uppercase; letter-spacing:1.2px; }
+
+    .info-row { display:flex; gap:12px; }
+    .info-chip {
+      flex:1;
+      background:rgba(255,255,255,.04);
+      border:1px solid rgba(255,255,255,.07);
+      border-radius:10px;
+      padding:10px 12px;
+      text-align:center;
+    }
+    .info-chip .chip-icon { font-size:1.1rem; }
+    .info-chip .chip-label { font-size:.68rem; color:var(--gray); margin-top:3px; letter-spacing:.5px; }
+  </style>
+</head>
+<body>
+
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+
+  <div class="page">
+    <div class="card">
+
+      <!-- Logo -->
+      <div class="logo-area">
+        <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+          <circle cx="24" cy="24" r="22" fill="rgba(200,212,0,0.12)" stroke="rgba(200,212,0,0.3)" stroke-width="1"/>
+          <path d="M14 28 Q20 16 26 24 Q32 32 24 34 Q16 36 14 28Z" fill="#c8d400" opacity="0.9"/>
+          <path d="M22 20 Q28 10 34 18 Q38 24 30 26 Q24 28 22 20Z" fill="#1a5c5c" opacity="0.8"/>
+          <circle cx="24" cy="26" r="3.5" fill="#c8d400"/>
+        </svg>
+        <div>
+          <div class="logo-text">renova<span>E</span>co</div>
+          <div class="logo-sub">Energia Solar Cooperativa</div>
+        </div>
+      </div>
+
+      <!-- Heading -->
+      <div class="heading">Gerador de<br/><span>Relatório Investidor</span></div>
+      <p class="subheading">Envie a planilha de cobranças e receba o relatório formatado pronto para repasse.</p>
+
+      <!-- Drop zone -->
+      <div class="dropzone" id="dropzone">
+        <input type="file" id="fileInput" accept=".xlsx,.xls" />
+        <span class="dz-icon">📊</span>
+        <div class="dz-title" id="dzTitle">Clique ou arraste o arquivo Excel</div>
+        <div class="dz-hint">.xlsx ou .xls • Planilha de cobranças RenovaEco</div>
+        <div class="dz-filename" id="dzFilename" style="display:none"></div>
+      </div>
+
+      <!-- Button -->
+      <button class="btn" id="btnGerar" disabled>
+        ⚡ Gerar Relatório
+      </button>
+
+      <!-- Status -->
+      <div id="status" style="display:none" class="status"></div>
+
+      <!-- Info chips -->
+      <div class="divider"><span>Informações</span></div>
+      <div class="info-row">
+        <div class="info-chip"><div class="chip-icon">🔒</div><div class="chip-label">Seguro</div></div>
+        <div class="info-chip"><div class="chip-icon">⚡</div><div class="chip-label">Instantâneo</div></div>
+        <div class="info-chip"><div class="chip-icon">📄</div><div class="chip-label">XLSX</div></div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    const fileInput  = document.getElementById("fileInput");
+    const dropzone   = document.getElementById("dropzone");
+    const dzTitle    = document.getElementById("dzTitle");
+    const dzFilename = document.getElementById("dzFilename");
+    const btnGerar   = document.getElementById("btnGerar");
+    const statusEl   = document.getElementById("status");
+
+    let selectedFile = null;
+
+    function setFile(f) {
+      selectedFile = f;
+      dzFilename.textContent = "✓ " + f.name;
+      dzFilename.style.display = "inline-flex";
+      btnGerar.disabled = false;
+      setStatus(null);
+    }
+
+    function setStatus(type, msg) {
+      if (!type) { statusEl.style.display = "none"; return; }
+      statusEl.className = "status " + type;
+      statusEl.innerHTML = (type === "success" ? "✅ " : "⚠️ ") + msg;
+      statusEl.style.display = "flex";
+    }
+
+    // File input change
+    fileInput.addEventListener("change", (e) => {
+      if (e.target.files[0]) setFile(e.target.files[0]);
+    });
+
+    // Drag & drop
+    dropzone.addEventListener("dragover",  (e) => { e.preventDefault(); dropzone.classList.add("dragging"); dzTitle.textContent = "Solte o arquivo aqui"; });
+    dropzone.addEventListener("dragleave", ()  => { dropzone.classList.remove("dragging"); dzTitle.textContent = "Clique ou arraste o arquivo Excel"; });
+    dropzone.addEventListener("drop",      (e) => {
+      e.preventDefault();
+      dropzone.classList.remove("dragging");
+      dzTitle.textContent = "Clique ou arraste o arquivo Excel";
+      if (e.dataTransfer.files[0]) setFile(e.dataTransfer.files[0]);
+    });
+
+    // Submit
+    btnGerar.addEventListener("click", async () => {
+      if (!selectedFile) return;
+
+      btnGerar.disabled = true;
+      btnGerar.innerHTML = '<span class="spinner"></span> Gerando relatório...';
+      setStatus(null);
+
+      try {
+        const formData = new FormData();
+        formData.append("file", selectedFile);
+
+        const response = await fetch("http://127.0.0.1:8000/upload", { method: "POST", body: formData });
+
+        if (!response.ok) {
+          const err = await response.json();
+          throw new Error(err.erro || "Erro ao gerar relatório.");
+        }
+
+        const blob = await response.blob();
+        const url  = window.URL.createObjectURL(blob);
+        const a    = document.createElement("a");
+        a.href     = url;
+        a.download = "relatorio_investidor.xlsx";
+        a.click();
+        window.URL.revokeObjectURL(url);
+
+        setStatus("success", "Relatório gerado com sucesso! O download iniciou automaticamente.");
+      } catch (e) {
+        setStatus("error", e.message);
+      } finally {
+        btnGerar.disabled = false;
+        btnGerar.innerHTML = '⚡ Gerar Relatório';
+      }
+    });
+  </script>
+</body>
+</html>
